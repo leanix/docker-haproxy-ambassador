@@ -1,0 +1,32 @@
+global
+  log 127.0.0.1 local0 info
+  stats socket /var/run/haproxy.stat user haproxy group haproxy mode 600 level admin
+
+defaults
+  log global
+  option dontlognull
+  option redispatch
+  timeout queue 1m
+  timeout connect 5s
+  timeout client 2m
+  timeout server 2m
+  timeout check 5s
+  retries 3
+  maxconn 2000
+
+{{ $service_port := printf "%s" (getenv "SERVICE_PORT") }}
+{{ $etcd_prefix := printf "%s" (getenv "ETCD_PREFIX") }}
+{{ $service_type := printf "%s" (getenv "SERVICE_TYPE") }}
+
+frontend {{ $service_type }}
+    bind *:{{ $service_port }}
+    mode tcp
+    use_backend backend-{{ $service_type }} if TRUE
+
+backend backend-{{ $service_type }}
+    mode tcp
+    balance roundrobin
+    {{ $service_path := printf "%s/*" $etcd_prefix }}
+    {{ range gets $service_path }}
+    server {{base .Key}} {{.Value}} check
+    {{ end }}
