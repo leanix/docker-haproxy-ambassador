@@ -26,7 +26,7 @@ frontend {{ $service_type }}
 backend backend-{{ $service_type }}
     mode tcp
     balance roundrobin
-    {{ $service_path := printf "%s/*" $etcd_prefix }}
+    {{ $service_path := printf "%s/instances/*" $etcd_prefix }}
     {{ range gets $service_path }}
     server {{base .Key}} {{.Value}} check
     {{ end }}
