@@ -3,7 +3,7 @@ global
   stats socket /var/run/haproxy.stat user haproxy group haproxy mode 600 level admin
 
 {{ $service_port := printf "%s" (getenv "SERVICE_PORT") }}
-{{ $etcd_prefix := printf "%s" (getenv "ETCD_PREFIX") }}
+{{ $service_path := printf "%s" (getenv "SERVICE_PATH") }}
 {{ $service_type := printf "%s" (getenv "SERVICE_TYPE") }}
 {{ $timeout_client_server := printf "%s" (getenv "TIMEOUT_CLIENT_SERVER") }}
 
@@ -27,7 +27,6 @@ frontend {{ $service_type }}
 backend backend-{{ $service_type }}
     mode tcp
     balance roundrobin
-    {{ $service_path := printf "%s/instances/*" $etcd_prefix }}
     {{ range gets $service_path }}
     server {{base .Key}} {{.Value}} check
     {{ end }}
